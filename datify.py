@@ -75,7 +75,8 @@ def _isSameWord(str1: str, str2: str):
     :return: Bool
     """
 
-    return len(set(str1).difference(set(str2))) < len(str1)/2 and str1[0:1] == str2[0:1]
+    return len(set(str1).difference(set(str2))) < len(str1) / 2 and (
+        str1[0:2] == str2[0:2] if len(str1) < 4 else str1[0:3] == str2[0:3])
 
 
 class Datify:
