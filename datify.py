@@ -16,7 +16,7 @@ representation of month.
 Datify can handle all of the cases of user input listed below and may work with some other cases. Try by yourself before
 using:
 
-'06.06.2021'                # Also, '/' and ' ' can be used as separators instead '.', and new separators can be added
+'06.06.2021'                # Also, '-', '/', and ' ' can be used as separators instead '.', and new separators can be added
 '6/6/2021'                  # to  `config['Separators']`
 'July, 6th, 2021'
 '6th of July, 2021'
@@ -40,7 +40,7 @@ import re
 from datetime import datetime
 
 config = {
-    'Splitters': [' ', '/', '.'],
+    'Splitters': [' ', '/', '.', '-'],
 
     'FORMAT_DAY_DIGIT': r'[0123]?\d$',
     'FORMAT_DAY_ALNUM': r'[0123]?\d',
@@ -114,7 +114,7 @@ class Datify:
                     else:
                         self.lost.append(word)
 
-            elif user_input.isdigit():
+            elif user_input.isdigit() and len(user_input) > 4:
                 search = re.search(Datify.date_format, user_input)
                 if search:
                     search_str = search.group(0)
@@ -124,6 +124,15 @@ class Datify:
 
                 else:
                     raise ValueError
+
+            elif Datify.isDay(user_input):
+                self.setDay(user_input)
+
+            elif Datify.isAlphaMonth(user_input):
+                self.setMonth(user_input)
+
+            elif Datify.isYear(user_input):
+                self.setYear(user_input)
 
             else:
                 raise ValueError
