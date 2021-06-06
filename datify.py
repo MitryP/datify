@@ -89,7 +89,7 @@ class Datify:
 
     def __init__(self, user_input: str = None, year: int = None, month: int = None, day: int = None):
         """
-        Creates Datetime object. If no parameters are given, raises ValueError.
+        Creates Datify object. If no parameters are given, raises ValueError.
 
         :param user_input: Takes str, optional
         :param year: Takes int, optional
