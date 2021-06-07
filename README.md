@@ -21,9 +21,9 @@ User input is processed through class `Datify`.
   3. `isAlphaMonth(string)` : Takes str. Returns True if given string suits months dictionary. *For languages in which there are multiple forms of words it's basically enough to have only the main form of the word in dictionary - see `_isSameWord` function.*
   4. `getAlphaMonth(string)` :  Takes str. Returns number(int) of month name in given string according to months dictionary. If no month name is found in the string, returns None.
   5. `isDay(day)` : Takes str or int. Returns True if given parameter suits day format.
-  6. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section *Formats*).
+  6. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section *Default formats*).
   7. `isDatePart(string)` : Takes str. Returns True if given string contains at least one of date parts such as day, month, or year.
-  8. `_getWordsList(string)` : from given string returns list of words splitted by a found separator in `config['Separators']` (See the section *Config*). If no separators are found, returns None.
+  8. `_getWordsList(string)` : from given string returns list of words splitted by a found separator in `config['SEPARATORS']` (See the section *Config*). If no separators are found, returns None.
 
   #### Instance methods:
   1. `date()` : returns datetime object from parameters of Datify object. If not all of the necessary parameters are known (`year`, `month`, and `day`), raises TypeError.
@@ -36,5 +36,33 @@ User input is processed through class `Datify`.
 ## Global functions:
 1. `_isSameWords(str1, str2)` : Takes two str. Tries to figure out if the given strings are different forms of the same word. It's necessary for languages such as Russian, and Ukrainian. For words with less than 4 symbols, compares the first two symbols of the strings and checks if difference between chars is not very big. For longer words does the same but compares the first three symbols. Try not to use it anywhere, because its effect may be upredictable outside of the context of month names.
 
+## Default formats:
+> **Note that in this module the day is checked firstly, the month - after it. `06.07.2021` stands for `6th of July, 2021`!**
+- General date format:
+  `'[12][01]\d\d[01]\d[0123]\d$'` - `YYYYMMDD` - e.g. `20210706`
+- Day formats:
+  0 < day <= 31
+  - For digit-only entries: `'[0123]?\d$'` - `D?D` - e.g. `13`, `05`, `6` etc.
+  - For alpha-numeric entries: `'[0123]?\d\D+$'` - e.g. `1st`, `2nd`, `25th`, `3-е` etc.
+- Month formats:
+  0 < month <= 12
+  - For digit-only entries: `'[01]?\d$'` - `M?M` - e.g. `06`, `7` etc.
+  - For alphabethic strings: compares string to the months dict, and if no entries are found, uses `_isSameWord` function with all names from dict.
+- Year format:
+  `'([012]\d\d\d$)|(\d\d$)'` - `YYYY` or `YY` - e.g. `2021` or `21`.
+  > Note that if shortened year `YY` is given, it counts as `20YY`.
+
+## Config:
+You can customize splitters list, and change format of the all date parts, accessing them using `config['KEY']`.
+n. Name : KEY -- description
+1. Splitters : `'SPLITTERS'` -- the list of separators for `Datify._getWordsList`. Contains ` `, `.`, `-`, and `/` by default.
+2. Formats (See section *Default formats*) :
+  - Digit day : `'FORMAT_DAY_DIGIT'`
+  - Alpha-numeric day : `'FORMAT_DAY_ALNUM'`
+  - Digit month : `'FORMAT_MONTH_DIGIT'`
+  - Digit year : `'FORMAT_YEAR_DIGIT'`
+  - General date : `'FORMAT_DATE'`
+
+---
 
 ## Examples:
