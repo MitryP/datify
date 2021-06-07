@@ -2,6 +2,10 @@
 # module datify
 
 """This module allows extracting valid date from user input.
+Datify can identify separate parts of dates, e.g. '2021', 'july', '6th'.
+Also, module functional can be used to identify separate parts of data through static class methods.
+isDay(day), isYear(year), isDigitMonth(month) for digit representation of month, and isAlphaMonth(month) for alpha
+representation of month.
 
 User input is processed through class 'Datify'. Code  `Datify(string).date()`  will return datetime object if all 
 parameters were given in the string. Otherwise it will raise TypeError. To get tuple of all available fields from 
@@ -9,9 +13,6 @@ string use  `Datify(string).tuple()` To get datetime object or tuple if datetime
 `Datify(string).date_or_tuple()`
 Languages supported: English, Russian, Ukrainian.
 
-Datify can be used to identify separate parts of dates, e.g. '2021', 'july', '6th' through inner functions
-isDay(day), isYear(year), isDigitMonth(month) for digit representation of month, and isAlphaMonth(month) for alpha
-representation of month.
 ===
 Datify can handle all of the cases of user input listed below and may work with some other cases. Try by yourself before
 using:
@@ -40,12 +41,12 @@ import re
 from datetime import datetime
 
 config = {
-    'Splitters': [' ', '/', '.', '-'],
+    'SPLITTERS': [' ', '/', '.', '-'],
 
     'FORMAT_DAY_DIGIT': r'[0123]?\d$',
-    'FORMAT_DAY_ALNUM': r'[0123]?\d',
+    'FORMAT_DAY_ALNUM': r'[0123]?\d\D+$',
     'FORMAT_MONTH_DIGIT': r'[01]?\d$',
-    'FORMAT_YEAR_DIGIT': r'[012]\d\d\d$|\d\d$',
+    'FORMAT_YEAR_DIGIT': r'([012]\d\d\d$)|(\d\d$)',
     'FORMAT_DATE': r'[12][01]\d\d[01]\d[0123]\d$'
 }
 
@@ -80,7 +81,7 @@ def _isSameWord(str1: str, str2: str):
 
 
 class Datify:
-    splitters = config['Splitters']
+    splitters = config['SPLITTERS']
     day_format_digit = config['FORMAT_DAY_DIGIT']
     day_format_alnum = config['FORMAT_DAY_ALNUM']
     month_format_digit = config['FORMAT_MONTH_DIGIT']
@@ -183,24 +184,44 @@ class Datify:
             return False
 
     @staticmethod
-    def isDay(string: str):
+    def isDate(date: [str, int]):
         """
-        Returns True if given string is suits the day format: e.g. '09' or '9,' or '9th'.
+        Returns True if given parameter suits format of date ('YYYYMMDD' by default).
         Returns True or False
 
-        :param string: Takes str
+        :param date: Takes str
         :return: Bool
         """
 
-        if string.isdigit():
-            if re.match(Datify.day_format_digit, string) and 0 < int(string) <= 31:
+        date = str(date)
+
+        if re.match(Datify.date_format, date):
+            return True
+
+        else:
+            return False
+
+    @staticmethod
+    def isDay(day: [str, int]):
+        """
+        Returns True if given parameter is suits the day format: e.g. '09' or '9,' or '9th'.
+        Returns True or False
+
+        :param day: Takes str
+        :return: Bool
+        """
+
+        day = str(day)
+
+        if day.isdigit():
+            if re.match(Datify.day_format_digit, day) and 0 < int(day) <= 31:
                 return True
 
             else:
                 return False
 
         else:
-            if re.match(Datify.day_format_alnum, string):
+            if re.match(Datify.day_format_alnum, day):
                 return True
 
             else:
@@ -213,6 +234,8 @@ class Datify:
         :param day: Takes str or int
         :return: no return
         """
+
+        day = str(day)
 
         if Datify.isDay(day):
             if day.isdigit():
@@ -236,16 +259,18 @@ class Datify:
             raise ValueError
 
     @staticmethod
-    def isDigitMonth(string: str):
+    def isDigitMonth(month: [str, int]):
         """
-        Returns True if the given string suits digit month format: e.g. '09' or '9'.
+        Returns True if the given parameter suits digit month format: e.g. '09' or '9'.
         Returns True or False.
 
-        :param string: Takes str
+        :param month: Takes str
         :return: Bool
         """
 
-        if re.match(Datify.month_format_digit, string) and 0 < int(string) <= 12:
+        month = str(month)
+
+        if re.match(Datify.month_format_digit, month) and 0 < int(month) <= 12:
             return True
 
         else:
@@ -254,7 +279,7 @@ class Datify:
     @staticmethod
     def isAlphaMonth(string: str):
         """
-        Returns True if given string suits alpha month format: e.g. 'January' or 'jan' or 'январь' or 'января'.
+        Returns True if given parameter suits alpha month format: e.g. 'January' or 'jan' or 'январь' or 'января'.
         Returns True or False.
 
         :param string: Takes str
@@ -263,7 +288,7 @@ class Datify:
 
         word = string.lower()
         for month in Months.keys():
-            if word in month or any(_isSameWord(month_name, word) for month_name in month):
+            if any(_isSameWord(month_name, word) for month_name in month):
                 return True
 
             else:
@@ -298,26 +323,30 @@ class Datify:
         :return: no return
         """
 
-        if Datify.isDigitMonth(str(month)):
+        month = str(month)
+
+        if Datify.isDigitMonth(month):
             self.month = int(month)
 
-        elif Datify.isAlphaMonth(str(month)):
+        elif Datify.isAlphaMonth(month):
             self.month = Datify.getAlphaMonth(month)
 
         else:
             raise ValueError
 
     @staticmethod
-    def isYear(string: str):
+    def isYear(year: [str, int]):
         """
-        Returns True if given string is suitable for the year format: e.g. '14' or '2014'.
+        Returns True if given parameter is suitable for the year format: e.g. '14' or '2014'.
         Returns True or False.
 
-        :param string: Takes str
+        :param year: Takes str
         :return: Bool
         """
 
-        if re.match(Datify.year_format, string):
+        year = str(year)
+
+        if re.match(Datify.year_format, year):
             return True
 
         else:
@@ -331,8 +360,10 @@ class Datify:
         :return: no return
         """
 
+        year = str(year)
+
         if Datify.isYear(year):
-            if len(str(year)) == 4:
+            if len(year) == 4:
                 self.year = int(year)
 
             else:
@@ -405,19 +436,3 @@ class Datify:
 
         except TypeError:
             return self.tuple()
-
-    @staticmethod
-    def isDate(string: str):
-        """
-        Returns True if given string suits format of date ('YYYYMMDD' default).
-        Returns True or False
-
-        :param string: Takes str
-        :return: Bool
-        """
-
-        if re.match(Datify.date_format, string):
-            return True
-
-        else:
-            return False
