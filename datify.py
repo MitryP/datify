@@ -202,6 +202,23 @@ class Datify:
             return False
 
     @staticmethod
+    def findDate(string: str):
+        """
+        Returns date in general date format from given string if present. Otherwise, returns None
+        :param string: Takes str
+        :return: str or None
+        """
+
+        res = re.search(Datify.date_format[:-1], string)
+
+        if res:
+            return res.group(0)
+
+        else:
+            return None
+
+
+    @staticmethod
     def isDay(day: [str, int]):
         """
         Returns True if given parameter is suits the day format: e.g. '09' or '9,' or '9th'.
@@ -242,14 +259,10 @@ class Datify:
                 self.day = int(day)
 
             elif re.match(Datify.day_format_alnum, day):
-                day_re = re.search(Datify.day_format_alnum, day)
+                day_re = re.search(Datify.day_format_digit[0:-1], day)
 
                 if day_re:
                     day_str = day_re.group(0)
-
-                    if day_str.find(','):
-                        day_str = day_str.replace(',', '')
-
                     self.day = int(day_str)
 
                 else:
