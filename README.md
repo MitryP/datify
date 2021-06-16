@@ -12,20 +12,20 @@ User input is processed through class `Datify`.
 ---
 
 ## Class:
-` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError.
-**See the section *Formats* to discover default Ditify's formats**
+` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError. **See the section *Formats* to discover default Datify's formats.**
 ### Class methods:
   #### Static:
-  1. `isYear(year)` : Takes str or int. Returns True if given parameter suits year format.
-  2. `isDigitMonth(month)` : Takes str or int. Returns True if given parameter suits digit month format.
-  3. `isAlphaMonth(string)` : Takes str. Returns True if given string suits months dictionary. *For languages in which there are multiple forms of words it's basically enough to have only the main form of the word in dictionary - see `_isSameWord` function.*
-  4. `getAlphaMonth(string)` :  Takes str. Returns number(int) of month name in given string according to months dictionary. If no month name is found in the string, returns None.
-  5. `isDay(day)` : Takes str or int. Returns True if given parameter suits day format.
-  6. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section *Default formats*).
-  7. `isDatePart(string)` : Takes str. Returns True if given string contains at least one of date parts such as day, month, or year.
-  8. `_getWordsList(string)` : from given string returns list of words splitted by a found separator in `config['SEPARATORS']` (See the section *Config*). If no separators are found, returns None.
+  1. `findDate(string)` : Takes string. Returns substring with date in General Date format if it is contained in the given string.
+  2. `isYear(year)` : Takes str or int. Returns True if given parameter suits year format.
+  3. `isDigitMonth(month)` : Takes str or int. Returns True if given parameter suits digit month format.
+  4. `isAlphaMonth(string)` : Takes str. Returns True if given string suits months dictionary. *For languages in which there are multiple forms of words it's basically enough to have only the main form of the word in dictionary - see `_isSameWord` function.*
+  5. `getAlphaMonth(string)` :  Takes str. Returns number(int) of month name in given string according to months dictionary. If no month name is found in the string, returns None.
+  6. `isDay(day)` : Takes str or int. Returns True if given parameter suits day format.
+  7. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section *Default formats*).
+  8. `isDatePart(string)` : Takes str. Returns True if given string contains at least one of date parts such as day, month, or year.
+  9. `_getWordsList(string)` : from given string returns list of words splitted by a found separator in `config['SEPARATORS']` (See the section *Config*). If no separators are found, returns None.
 
-  #### Instance methods:
+  #### Instance:
   1. `date()` : returns datetime object from parameters of Datify object. If not all of the necessary parameters are known (`year`, `month`, and `day`), raises TypeError.
   2. `tuple()` : returns tuple from all known parameters. *Be careful using it because of there is no accurate way to know if number is a day or a month!*
   3. `date_or_tuple()` : returns datetime object if all of the necessary parameters are known, otherwise returns tuple from all known parameters.
@@ -66,4 +66,94 @@ n. Name : KEY -- description
 ---
 
 ## Examples:
-_Examples will appear here shortly.._
+I'll use different date formats in every example to show that Datify can handle them all. Let's begin!
+```python
+from datify import Datify  # Importing our main class
+```
+1. Extracting date from string with a Datify object
+```python
+user_input = '06.07.2021'  # Imitating user input. Note that day is first!
+val = Datify(user_input)
+print(val)  # Output: <Datify object (6, 7, 2021)>
+```
+Any string can be processed this way.
+
+2. Getting exact date parameters from Datify
+```python
+user_input = '06/07'
+val = Datify(user_input)
+
+date_day = val.day  # 6
+date_month = val.month  # 7
+date_year = val.year  # None
+```
+
+3. Getting date in **datetime** object
+```python
+user_input = '06-07-21'
+date = Datify(user_input).date()  # 2021-07-06 00:00:00
+```
+If there is a possibility to get an incomplite date, datetime will raise TypeError:
+```python
+user_input = '06/07'
+date = Datify(user_input).date()  # TypeError: an integer is required (got type NoneType)
+```
+Use the first or the next examples instead, if there is a chanse to get incomplete date.
+
+4. Getting output in **tuple**:
+```python
+user_input = '6th of July 2021'
+res = Datify(user_input).tuple()  # (6, 7, 2021)
+```
+If month or day is not given, you wouldn't be able to understand what exactly is given this way. Use the first example instead.
+
+5. Getting alphapetic month without crating Datify exemplar
+```python
+Datify.getAlphaMonth('february')  # 2
+```
+7. Various checks for strings
+```python
+# Check for any date part
+Datify.isDatePart('6')  # True (may be day or month)
+Datify.isDatePart('31')  # True
+Datify.isDatePart('june')  # True
+Datify.isDatePart('jan')  # True
+Datify.isDatePart('33')  # True (it might be year in `YY` spelling)
+Datify.isDatePart('333')  # False
+Datify.isDatePart('3131')  # False (it doesn't suit year format (from `10YY` to `21YY`))
+
+# Check for date in General Date format
+Datify.isDate('20210607')  # True
+
+# Checks for particular date parts
+
+# Year
+Datify.isYear('2021')  # True
+Datify.isYear('221')  # False
+
+# Month
+Datify.isDigitMonth('11')  # True (0 < str <= 12)
+Datify.isAlphaMonth('June')  # True (compares string to dict and uses `_isSameWord` function
+
+# Day
+Datify.isDay('13')  # True (0 < str <= 31)
+```
+
+8. Getting date in General Date format from any string
+```python
+user_input = 'created "20200120"'
+Datify.findDate(user_input)  # '20200120'
+```
+
+9. Parameters of an existing Daitfy object can be modified this way
+```python
+date = Datify('6th of July, 2021')  # <Datify object (6, 7, 2021)>
+date.setYear(2018)
+print(date.date())  # 2018-07-06 00:00:00
+```
+Also exact parameters can be set during creating object:
+```python
+Datify('6th of July, 2021', year=2018, month=3)  # <Datify object (6, 3, 2018)>
+```
+
+*Datify is much more powerful than you may think.*
