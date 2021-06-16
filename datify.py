@@ -99,7 +99,7 @@ class Datify:
         :param day: Takes int, optional
         """
 
-        self.day, self.month, self.year, self.lost = None, None, None, list()
+        self.day, self.month, self.year, self.lost = day, month, year, list()
         if user_input:
             words = self._getWordsList(user_input)
             if words:
@@ -321,7 +321,7 @@ class Datify:
 
         word = string.lower()
         for month in Months.keys():
-            if word in month or any(_isSameWord(month_name, word) for month_name in month):
+            if word in month or any(_isSameWord(word, month_name) for month_name in month):
                 return Months[month]
 
         else:
@@ -449,3 +449,6 @@ class Datify:
 
         except TypeError:
             return self.tuple()
+
+    def __repr__(self):
+        return f'<Datify object {self.tuple()}>'
