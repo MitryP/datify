@@ -15,73 +15,77 @@
 
 ## Класс:
 ` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError. **See the section *Formats* to discover default Datify's formats.**
-: принимает `user_input: str` при создании. Также может принимать именованые аргументы `year`, `month` и `day` вместе с `user_input` или без него. Если ни один параметр не задан, поднимает ValueError. **Ознакомьтесь с секцией *Форматы*.**
+: принимает `user_input: str` при создании. Также может принимать именованые аргументы `year`, `month` и `day` вместе с `user_input` или без него. Если ни один параметр не задан, поднимает ValueError. **См. секцию *Форматы*, чтобы ознакомиться со стандартными форматами Datify.**
 ### Методы класса:
   #### Статические:
   1. `findDate(string)` : Принимает str. Возвращает подстроку с датой в формате General Date Format если она содержится в заданной строке. Иначе возвращает None.
   2. `isYear(year)` : Принимает str или int. Возвращает True если заданый параметр соответствует формату Digit Year Format.
   3. `isDigitMonth(month)` : Принимает str или int. Возвращает True если заданый параметр соответствует формату Digit Month Format.
   4. `isAlphaMonth(string)` : Принимает str. Возвращает True если заданная строка содержится в словаре названий месяцев. *Для языков, в которых есть падежи (русский, украинский) в основном достаточно иметь в словаре только именительную форму слова - смотри функцию `_isSameWord`.*
-  5. `getAlphaMonth(string)` :  Принимает str. Возвращает number(int) of month name in given string according to months dictionary. If no month name is found in the string, returns None.
-  6. `isDay(day)` : Принимает str или int. Возвращает True if given parameter suits day format.
-  7. `isDate(date)` : Принимает str или int. Возвращает True if given parameter suits general date format (See the section *Default formats*).
-  8. `isDatePart(string)` : Принимает str. Возвращает True if given string contains at least one of date parts such as day, month, or year.
-  9. `_getWordsList(string)` : from given string returns list of words splitted by a found separator in `config['SEPARATORS']` (See the section *Config*). If no separators are found, returns None.
+  5. `getAlphaMonth(string)` :  Принимает str. Возвращает int - номер месяца в заданой строке согласно словарю. Если строка не содержит известное имя месяца, врозвращает None.
+  6. `isDay(day)` : Принимает str или int. Возвращает True если заданый параметр соответствует формату Day Format.
+  7. `isDate(date)` : Принимает str или int. Возвращает True  если заданый параметр соответствует формату General Date Format (См. секцию *Форматы*).
+  8. `isDatePart(string)` : Принимает str. Возвращает True  если заданый параметр содержит хотя бы одну часть даты - день, месяц (номер или название) или год.
+  9. `_getWordsList(string)` : Возвращает список слов, разделённый найденым разделителем из `config['SEPARATORS']` (См. секцию *Настройка*). Если строка не содержит известных разделителей, возвращает None.
 
-  #### Instance:
-  1. `date()` : returns datetime object from parameters of Datify object. If not all of the necessary parameters are known (`year`, `month`, and `day`), raises TypeError.
-  2. `tuple()` : returns tuple from all known parameters. *Be careful using it because of there is no accurate way to know if number is a day or a month!*
-  3. `date_or_tuple()` : returns datetime object if all of the necessary parameters are known, otherwise returns tuple from all known parameters.
-  4. `setYear(year)` : Takes str or int. Extracts year from given parameter and sets `year` field of the called Datify object. If given parameter doesn't suit year format, raises ValueError. *If the year is given in shortened format, counts it as 20YY.*
-  5. `setMonth(month)` : Takes str or int. Extracts month from given parameter and sets `month` field of the called Datify object. If given parameter doesn't suit month format and doesn't contain any month names, raises ValueError.
-  6. `setDay(day)` : Takes str or int. Extracts day from given parameter and sets `day` field of the called Datify object. If given parameter doesn't suit day format, raises ValueError.
+  #### Методы экземпляра:
+  1. `date()` : Возвращает datetime object из параметров экземпляра Datify. Если были получены не все нужные параметры (`year`, `month` и `day`), daytime поднимает TypeError.
+  2. `tuple()` : Возвращает кортеж из всех известных параметров. *Если месяц или день не заданы, нет никакого способа определить, что именно находится в кортеже после того, как он был получен!*
+  3. `date_or_tuple()` : Возвращает datetime object, если известны все нужные параметры. Иначе возвращает кортеж из известных параметров.
+  4. `setYear(year)` : Принимает str или int. Извлекает год из полученной переменной и устанавливает поле `year` вызванного экземпляра Datify. Если полученный параметр не соответствует формату Year Format, поднимает ValueError. *Если год получен в сокращенном формате **YY**, это считается как **20YY**.*
+  5. `setMonth(month)` : Принимает str или int. Извлекает месяц из полученной переменной и устанавливает поле `month` вызванного экземпляра Datify. Если полученный параметр не соответствует формату Digit/Alpha Month Format, поднимает ValueError.
+  6. `setDay(day)` : Принимает str или int. Извлекает день из полученной переменной и устанавливает поле `day` вызванного экземпляра Datify. Если полученный параметр не соответствует формату Day Format, поднимает ValueError.
 
-## Global functions:
-1. `_isSameWords(str1, str2)` : Takes two str. Tries to figure out if the given strings are different forms of the same word. It's necessary for languages such as Russian, and Ukrainian. For words with less than 4 symbols, compares the first two symbols of the strings and checks if difference between chars is not very big. For longer words does the same but compares the first three symbols. Try not to use it anywhere, because its effect may be upredictable outside of the context of month names.
+## Форматы:
+> **Обратите внимание, что в этом модуле день проверяется первым, а месяц - после него. `06.07.2021` будет распознано как `6 июля 2021 года`!**
+- Формат General Date:
+  `'[12][01]\d\d[01]\d[0123]\d$'` - `ГГГГММДД` - напр. `20210706` - 6 июля 2021
+- Форматы дня:
+  0 < день <= 31
+  - Для случаев, когда строка содержит только цифры: `'[0123]?\d$'` - `Д?Д` - напр. `13`, `05`, `6` и т.д.
+  - Для случаев, когда день задан буквенно-цифровой строкой: `'[0123]?\d\D+$'` - напр. `1st`, `2nd`, `25th`, `3-е` и т.д.
+- Форматы месяца:
+  0 < месяц <= 12
+  - Для случаев, когда строка содержит только цифры: `'[01]?\d$'` - `M?M` - напр. `06`, `7` и т.д.
+  - Для случаев, когда день задан буквенно-цифровой строкой: сравнивает строку со словарём и пытается найти похожее название месяца.
+- Формат Year Format:
+  `'([012]\d\d\d$)|(\d\d$)'` - `ГГГГ` or `ГГ` - напр. `2021` или `21`.
+  > Обратите внимание, что если год задан в виде `ГГ`, это считается как `20ГГ`.
 
-## Default formats:
-> **Note that in this module the day is checked firstly, the month - after it. `06.07.2021` stands for `6th of July, 2021`!**
-- General date format:
-  `'[12][01]\d\d[01]\d[0123]\d$'` - `YYYYMMDD` - e.g. `20210706`
-- Day formats:
-  0 < day <= 31
-  - For digit-only entries: `'[0123]?\d$'` - `D?D` - e.g. `13`, `05`, `6` etc.
-  - For alpha-numeric entries: `'[0123]?\d\D+$'` - e.g. `1st`, `2nd`, `25th`, `3-е` etc.
-- Month formats:
-  0 < month <= 12
-  - For digit-only entries: `'[01]?\d$'` - `M?M` - e.g. `06`, `7` etc.
-  - For alphabethic strings: compares string to the months dict, and if no entries are found, uses `_isSameWord` function with all names from dict.
-- Year format:
-  `'([012]\d\d\d$)|(\d\d$)'` - `YYYY` or `YY` - e.g. `2021` or `21`.
-  > Note that if shortened year `YY` is given, it counts as `20YY`.
-
-## Config:
-You can customize splitters list, and change format of the all date parts, accessing them using `config['KEY']`.
-n. Name : KEY -- description
-1. Splitters : `'SPLITTERS'` -- the list of separators for `Datify._getWordsList`. Contains ` `, `.`, `-`, and `/` by default.
-2. Formats (See section *Default formats*) :
-  - Digit day : `'FORMAT_DAY_DIGIT'`
-  - Alpha-numeric day : `'FORMAT_DAY_ALNUM'`
-  - Digit month : `'FORMAT_MONTH_DIGIT'`
-  - Digit year : `'FORMAT_YEAR_DIGIT'`
-  - General date : `'FORMAT_DATE'`
+## Настройка:
+После импорта модуля есть возможность настроить список разделителей и изменить все стандартные форматы, обращаясь к ним через `Datify.config['KEY']`.
+№. Имя : КЛЮЧ -- описание
+1. Разделители : `'SPLITTERS'` -- множество разделителей для `Datify._getWordsList`. Содержит ` `, `.`, `-` и `/` по умолчанию.
+2. Форматы (См. секцию *Форматы*) :
+  - Digit Day : `'FORMAT_DAY_DIGIT'`
+  - Alpha-numeric Day : `'FORMAT_DAY_ALNUM'`
+  - Digit Month : `'FORMAT_MONTH_DIGIT'`
+  - Digit Year : `'FORMAT_YEAR_DIGIT'`
+  - General Date : `'FORMAT_DATE'`
+ 
+Например:
+```python
+Datify('17_06_2021')  # ValueError
+Datify.config['SPLITTERS'].add('_')  # Добавляем нужный разделитель в конфиг
+Datify('17_06_2021')  # <Datify object (17, 6, 2021)>
+```
 
 ---
 
-## Examples:
-I'll use different date formats in every example to show that Datify can handle them all. Let's begin!
+## Примеры:
+Я буду каждый раз использовать разные форматы даты, чтобы показать, что Datify может работать с каждым из них. Начнём!
 ```python
-from datify import Datify  # Importing our main class
+from datify import Datify  # Импортируем главный класс. Все последуюющие действия будут с ним.
 ```
-1. Extracting date from string with a Datify object
+1. Извлечение даты из строки с помощью Datify
 ```python
-user_input = '06.07.2021'  # Imitating user input. Note that day is first!
+user_input = '06.07.2021'  # Имитируем пользовательский ввод. День идет первым!
 val = Datify(user_input)
 print(val)  # Output: <Datify object (6, 7, 2021)>
 ```
-Any string can be processed this way.
+Таким образом можно обработать любую строку.
 
-2. Getting exact date parameters from Datify
+2. Получение отдельных частей даты из Datify
 ```python
 user_input = '06/07'
 val = Datify(user_input)
@@ -91,72 +95,74 @@ date_month = val.month  # 7
 date_year = val.year  # None
 ```
 
-3. Getting date in **datetime** object
+3. Получение даты в экземпляре **datetime**
 ```python
 user_input = '06-07-21'
 date = Datify(user_input).date()  # 2021-07-06 00:00:00
 ```
-If there is a possibility to get an incomplite date, datetime will raise TypeError:
+Если дата не будет получена полностью (год, месяц и день), datetime поднимет TypeError:
 ```python
 user_input = '06/07'
 date = Datify(user_input).date()  # TypeError: an integer is required (got type NoneType)
 ```
-Use the first or the next examples instead, if there is a chanse to get incomplete date.
+Лучше использовать другие способы, если есть шанс получить неполную дату.
 
-4. Getting output in **tuple**:
+4. Получение кортежа из всех значений:
+Порядок значений:  день, месяц, год
 ```python
 user_input = '6th of July 2021'
-res = Datify(user_input).tuple()  # (6, 7, 2021)
-```
-If month or day is not given, you wouldn't be able to understand what exactly is given this way. Use the first example instead.
+Datify(user_input).tuple()  # (6, 7, 2021)
 
-5. Getting alphapetic month without crating Datify exemplar
+user_input = '6th of July'
+Datify(user_input).tuple()
+(6, 7, None)
+```
+
+5. Получение номера месяца из его названия без создания экземпляра Datify
 ```python
 Datify.getAlphaMonth('february')  # 2
 ```
-7. Various checks for strings
+7. Разнообразные проверки для строк
 ```python
-# Check for any date part
-Datify.isDatePart('6')  # True (may be day or month)
+# Любая часть даты
+Datify.isDatePart('6')  # True (может быть днём или месяцем)
 Datify.isDatePart('31')  # True
 Datify.isDatePart('june')  # True
 Datify.isDatePart('jan')  # True
-Datify.isDatePart('33')  # True (it might be year in `YY` spelling)
+Datify.isDatePart('33')  # True (может быть годом в виде `ГГ`)
 Datify.isDatePart('333')  # False
-Datify.isDatePart('3131')  # False (it doesn't suit year format (from `10YY` to `21YY`))
+Datify.isDatePart('3131')  # False (не соответствует формату года (от `1000` до `2199`))
 
-# Check for date in General Date format
+# Дата в формате General Date
 Datify.isDate('20210607')  # True
 
-# Checks for particular date parts
+# Определённые части даты
 
-# Year
+# Год
 Datify.isYear('2021')  # True
 Datify.isYear('221')  # False
 
-# Month
+# Месяц
 Datify.isDigitMonth('11')  # True (0 < str <= 12)
-Datify.isAlphaMonth('June')  # True (compares string to dict and uses `_isSameWord` function
+Datify.isAlphaMonth('June')  # True
 
-# Day
+# День
 Datify.isDay('13')  # True (0 < str <= 31)
 ```
 
-8. Getting date in General Date format from any string
+8. Поиск даты в формате General Date в любой строке
 ```python
 user_input = 'created "20200120"'
 Datify.findDate(user_input)  # '20200120'
 ```
 
-9. Parameters of an existing Daitfy object can be modified this way
+9. Изменение параметров существующего экземпляра Datify
 ```python
 date = Datify('6th of July, 2021')  # <Datify object (6, 7, 2021)>
 date.setYear(2018)
 print(date.date())  # 2018-07-06 00:00:00
 ```
-Also exact parameters can be set during creating object:
+Также можно вручную переопределить параметры обьекта Datify при его создании:
 ```python
 Datify('6th of July, 2021', year=2018, month=3)  # <Datify object (6, 3, 2018)>
 ```
-
-*Datify is much more powerful than you may think.*
