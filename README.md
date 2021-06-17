@@ -51,7 +51,8 @@ Simply run `pip install datify` from your command line (pip must be installed).
 
 ## Config:
 You can customize splitters list, and change format of the all date parts, accessing them using `Datify.config['KEY']`.
-n. Name : KEY -- description
+
+Dict keys:
 1. Splitters : `'SPLITTERS'` -- set of the separators for `Datify._getWordsList`. Contains ` `, `.`, `-`, and `/` by default.
 2. Formats (See section [*Formats*](#default-formats)) :
   - Digit day : `'FORMAT_DAY_DIGIT'`
