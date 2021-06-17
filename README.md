@@ -7,9 +7,10 @@ User input is processed through class `Datify`.
 - [x] Ukrainian.
 
 ---
+
 ## Installing
-`---`
----
+Simply run `pip install datify` from your command line (pip must be installed).
+
 
 ## Class:
 ` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError. **See the section *Formats* to discover default Datify's formats.**
@@ -27,14 +28,11 @@ User input is processed through class `Datify`.
 
   #### Instance:
   1. `date()` : returns datetime object from parameters of Datify object. If not all of the necessary parameters are known (`year`, `month`, and `day`), raises TypeError.
-  2. `tuple()` : returns tuple from all known parameters. *Be careful using it because of there is no accurate way to know if number is a day or a month!*
-  3. `date_or_tuple()` : returns datetime object if all of the necessary parameters are known, otherwise returns tuple from all known parameters.
+  2. `tuple()` : returns tuple from all parameters in format (day, month, year).
+  3. `date_or_tuple()` : returns datetime object if all of the necessary parameters are known, otherwise returns tuple of all parameters.
   4. `setYear(year)` : Takes str or int. Extracts year from given parameter and sets `year` field of the called Datify object. If given parameter doesn't suit year format, raises ValueError. *If the year is given in shortened format, counts it as 20YY.*
   5. `setMonth(month)` : Takes str or int. Extracts month from given parameter and sets `month` field of the called Datify object. If given parameter doesn't suit month format and doesn't contain any month names, raises ValueError.
   6. `setDay(day)` : Takes str or int. Extracts day from given parameter and sets `day` field of the called Datify object. If given parameter doesn't suit day format, raises ValueError.
-
-## Global functions:
-1. `_isSameWords(str1, str2)` : Takes two str. Tries to figure out if the given strings are different forms of the same word. It's necessary for languages such as Russian, and Ukrainian. For words with less than 4 symbols, compares the first two symbols of the strings and checks if difference between chars is not very big. For longer words does the same but compares the first three symbols. Try not to use it anywhere, because its effect may be upredictable outside of the context of month names.
 
 ## Default formats:
 > **Note that in this module the day is checked firstly, the month - after it. `06.07.2021` stands for `6th of July, 2021`!**
@@ -47,21 +45,28 @@ User input is processed through class `Datify`.
 - Month formats:
   0 < month <= 12
   - For digit-only entries: `'[01]?\d$'` - `M?M` - e.g. `06`, `7` etc.
-  - For alphabethic strings: compares string to the months dict, and if no entries are found, uses `_isSameWord` function with all names from dict.
+  - For alphabethic strings: tries to find similar words in months dict.
 - Year format:
   `'([012]\d\d\d$)|(\d\d$)'` - `YYYY` or `YY` - e.g. `2021` or `21`.
   > Note that if shortened year `YY` is given, it counts as `20YY`.
 
 ## Config:
-You can customize splitters list, and change format of the all date parts, accessing them using `config['KEY']`.
+You can customize splitters list, and change format of the all date parts, accessing them using `Datify.config['KEY']`.
 n. Name : KEY -- description
-1. Splitters : `'SPLITTERS'` -- the list of separators for `Datify._getWordsList`. Contains ` `, `.`, `-`, and `/` by default.
+1. Splitters : `'SPLITTERS'` -- set of the separators for `Datify._getWordsList`. Contains ` `, `.`, `-`, and `/` by default.
 2. Formats (See section *Default formats*) :
   - Digit day : `'FORMAT_DAY_DIGIT'`
   - Alpha-numeric day : `'FORMAT_DAY_ALNUM'`
   - Digit month : `'FORMAT_MONTH_DIGIT'`
   - Digit year : `'FORMAT_YEAR_DIGIT'`
   - General date : `'FORMAT_DATE'`
+
+For example:
+```python
+Datify('17_06_2021')  # ValueError  # Not works
+Datify.config['SPLITTERS'].add('_')  # Adding new separator to the set
+Datify('17_06_2021')  # <Datify object (17, 6, 2021)>  # Works!
+```
 
 ---
 
@@ -98,16 +103,19 @@ If there is a possibility to get an incomplite date, datetime will raise TypeErr
 user_input = '06/07'
 date = Datify(user_input).date()  # TypeError: an integer is required (got type NoneType)
 ```
-Use the first or the next examples instead, if there is a chanse to get incomplete date.
+Use the other examples instead, if there is a chanse to get incomplete date.
 
-4. Getting output in **tuple**:
+4. Getting output in a **tuple**:
+Order of values: day, month, year
 ```python
 user_input = '6th of July 2021'
-res = Datify(user_input).tuple()  # (6, 7, 2021)
-```
-If month or day is not given, you wouldn't be able to understand what exactly is given this way. Use the first example instead.
+Datify(user_input).tuple()  # (6, 7, 2021)
 
-5. Getting alphapetic month without crating Datify exemplar
+user_input = '6th of July'
+Datify(user_input).tuple()  # (6, 7, None)
+```
+
+5. Getting alphapetic month without creating Datify object
 ```python
 Datify.getAlphaMonth('february')  # 2
 ```
@@ -147,9 +155,9 @@ Datify.findDate(user_input)  # '20200120'
 
 9. Parameters of an existing Daitfy object can be modified this way
 ```python
-date = Datify('6th of July, 2021')  # <Datify object (6, 7, 2021)>
-date.setYear(2018)
-print(date.date())  # 2018-07-06 00:00:00
+res = Datify('6th of July, 2021')  # <Datify object (6, 7, 2021)>
+res.setYear(2018)
+print(res.date())  # 2018-07-06 00:00:00
 ```
 Also exact parameters can be set during creating object:
 ```python
