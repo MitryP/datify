@@ -1,10 +1,10 @@
 # encoding: utf-8
 # module datify
 
-"""This module allows extracting valid date from user input.
+"""This module allows to extract valid date from user input.
 Datify can identify separate parts of dates, e.g. '2021', 'july', '6th'.
-Also, module functional can be used to identify separate parts of data through static class methods.
-isDay(day), isYear(year), isDigitMonth(month) for digit representation of month, and isAlphaMonth(month) for alpha
+Also, module functions can be used to identify separate parts of date through class' static methods: 
+isDay(day), isYear(year), isDigitMonth(month) for digit representation of month, and isAlphaMonth(month) for alphabethic
 representation of month.
 
 User input is processed through class 'Datify'. Code  `Datify(string).date()`  will return datetime object if all 
@@ -30,11 +30,11 @@ and other.
 Getting result:
 
 Datify(str).date() -> datetime object or TypeError
-Datify(str).tuple() -> tuple
+Datify(str).tuple() -> tuple (day, month, year)
 Datify(str).date_or_tuple() -> datetime object or tuple
 
 ===
-Extended version of documentation can be found on GitHub: https://github.com/MitryP/datify/
+Extended version of documentation can be found at GitHub: https://github.com/MitryP/datify/
 """
 import re
 
@@ -80,6 +80,25 @@ def _isSameWord(str1: str, str2: str):
         str1[0:2] == str2[0:2] if len(str1) < 4 else str1[0:3] == str2[0:3])
 
 
+def _getWordsList(string: str):
+    """
+    Returns list of string's elements if given string contains one of the separators. Otherwise returns None.
+
+    :param string: Takes str
+    :return: list or None
+    """
+
+    for splitter in Datify.splitters:
+        if string.find(splitter) > 0:
+            return string.split(splitter)
+
+        else:
+            continue
+
+    else:
+        return None
+
+
 class configEditor:
     """
     Helper class. Allows to edit Datify config through Datify.config[key]
@@ -116,7 +135,7 @@ class Datify:
 
         self.day, self.month, self.year, self.lost = day, month, year, list()
         if user_input:
-            words = self._getWordsList(user_input)
+            words = _getWordsList(user_input)
             if words:
                 for word in words:
                     if Datify.isDay(word) and not self.day:
@@ -172,7 +191,7 @@ class Datify:
         :return: Bool
         """
 
-        words = Datify._getWordsList(string)
+        words = _getWordsList(string)
         if words:
             for word in words:
                 if any([
@@ -399,27 +418,6 @@ class Datify:
 
         else:
             raise ValueError
-
-    @staticmethod
-    def _getWordsList(string: str):
-        """
-        Returns list of string's elements if given string contains one of the separators. Otherwise returns None.
-        Example: Datify._getWordsList('04.06.2020')
-        Return: ['04', '06', '2020']
-
-        :param string: Takes str
-        :return: list or None
-        """
-
-        for splitter in Datify.splitters:
-            if string.find(splitter) > 0:
-                return string.split(splitter)
-
-            else:
-                continue
-
-        else:
-            return None
 
     def date(self):
         """
