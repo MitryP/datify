@@ -24,7 +24,6 @@ Simply run `pip install datify` from your command line (pip must be installed).
   6. `isDay(day)` : Takes str or int. Returns True if given parameter suits day format.
   7. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section *Default formats*).
   8. `isDatePart(string)` : Takes str. Returns True if given string contains at least one of date parts such as day, month, or year.
-  9. `_getWordsList(string)` : from given string returns list of words splitted by a found separator in `config['SEPARATORS']` (See the section *Config*). If no separators are found, returns None.
 
   #### Instance:
   1. `date()` : returns datetime object from parameters of Datify object. If not all of the necessary parameters are known (`year`, `month`, and `day`), raises TypeError.
