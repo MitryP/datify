@@ -3,7 +3,7 @@ This Python3 module allows to extract parts of valid date from user input.
 User input is processed through class `Datify`.
 ## Languages supported: 
 - [x] English
-- [x] Russian 
+- [x] Russian  -  [Readme на русском](README-ru.md) 
 - [x] Ukrainian.
 
 ---
