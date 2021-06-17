@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setuptools.setup(
   name = 'datify',
   packages = setuptools.find_packages(),
-  version = '1.01',
+  version = '1.0.1',
   license='Apache-2.0',
   description = 'Module that allows extracting valid date from user input.',
   long_description=long_description,
