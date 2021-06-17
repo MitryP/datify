@@ -19,7 +19,7 @@ Simply run `pip install datify` from your command line (pip must be installed).
   1. `findDate(string)` : Takes string. Returns substring with date in General Date format if it is contained in the given string.
   2. `isYear(year)` : Takes str or int. Returns True if given parameter suits year format.
   3. `isDigitMonth(month)` : Takes str or int. Returns True if given parameter suits digit month format.
-  4. `isAlphaMonth(string)` : Takes str. Returns True if given string suits months dictionary. *For languages in which there are multiple forms of words it's basically enough to have only the main form of the word in dictionary - see `_isSameWord` function.*
+  4. `isAlphaMonth(string)` : Takes str. Returns True if given string suits months dictionary. *For languages in which there are multiple forms of words it's basically enough to have only the main form of the word in dictionary.*
   5. `getAlphaMonth(string)` :  Takes str. Returns number(int) of month name in given string according to months dictionary. If no month name is found in the string, returns None.
   6. `isDay(day)` : Takes str or int. Returns True if given parameter suits day format.
   7. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section *Default formats*).
@@ -141,7 +141,7 @@ Datify.isYear('221')  # False
 
 # Month
 Datify.isDigitMonth('11')  # True (0 < str <= 12)
-Datify.isAlphaMonth('June')  # True (compares string to dict and uses `_isSameWord` function
+Datify.isAlphaMonth('June')  # True
 
 # Day
 Datify.isDay('13')  # True (0 < str <= 31)
