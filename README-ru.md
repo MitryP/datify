@@ -10,17 +10,18 @@
 ---
 ## Установка
 Просто выполните `pip install datify` из командной строки (pip должен быть установлен).
+
 ---
 
 ## Класс:
 ` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError. **See the section *Formats* to discover default Datify's formats.**
-: принимает `user_input: str` при создании. Также может принимать именованые аргументы `year`, `month` и `day` вместе с `user_input` или без него. Если ни один параметр не задан, поднимает ValueError. **Ознакомьтесь с секцией **
+: принимает `user_input: str` при создании. Также может принимать именованые аргументы `year`, `month` и `day` вместе с `user_input` или без него. Если ни один параметр не задан, поднимает ValueError. **Ознакомьтесь с секцией *Форматы*.**
 ### Методы класса:
   #### Статические:
   1. `findDate(string)` : Принимает str. Возвращает подстроку с датой в формате General Date Format если она содержится в заданной строке. Иначе возвращает None.
   2. `isYear(year)` : Принимает str или int. Возвращает True если заданый параметр соответствует формату Digit Year Format.
   3. `isDigitMonth(month)` : Принимает str или int. Возвращает True если заданый параметр соответствует формату Digit Month Format.
-  4. `isAlphaMonth(string)` : Принимает str. Возвращает True если заданная строка содержится в словаре названий месяцев. *Для языков, в которых есть падежи (русский, украинский) в основном достаточно иметь в словаре только именительную форму  - see `_isSameWord` function.*
+  4. `isAlphaMonth(string)` : Принимает str. Возвращает True если заданная строка содержится в словаре названий месяцев. *Для языков, в которых есть падежи (русский, украинский) в основном достаточно иметь в словаре только именительную форму слова - смотри функцию `_isSameWord`.*
   5. `getAlphaMonth(string)` :  Принимает str. Возвращает number(int) of month name in given string according to months dictionary. If no month name is found in the string, returns None.
   6. `isDay(day)` : Принимает str или int. Возвращает True if given parameter suits day format.
   7. `isDate(date)` : Принимает str или int. Возвращает True if given parameter suits general date format (See the section *Default formats*).
