@@ -41,7 +41,7 @@ import re
 from datetime import datetime
 
 config = {
-    'SPLITTERS': [' ', '/', '.', '-'],
+    'SPLITTERS': {' ', '/', '.', '-'},
 
     'FORMAT_DAY_DIGIT': r'[0123]?\d$',
     'FORMAT_DAY_ALNUM': r'[0123]?\d\D+$',
@@ -80,7 +80,22 @@ def _isSameWord(str1: str, str2: str):
         str1[0:2] == str2[0:2] if len(str1) < 4 else str1[0:3] == str2[0:3])
 
 
+class configEditor:
+    """
+    Helper class. Allows to edit Datify config through Datify.config[key]
+    """
+    @staticmethod
+    def __getitem__(key: str):
+        return config[key]
+
+    @staticmethod
+    def __setitem__(key, value):
+        config[key] = value
+
+
 class Datify:
+    config = configEditor()
+
     splitters = config['SPLITTERS']
     day_format_digit = config['FORMAT_DAY_DIGIT']
     day_format_alnum = config['FORMAT_DAY_ALNUM']
@@ -421,24 +436,15 @@ class Datify:
 
     def tuple(self):
         """
-        Returns tuple of known parameters.
+        Returns tuple of all parameters.
 
-        :return: datetime object or tuple
+        :return: tuple
         """
-        res = list()
-        for val in (self.day, self.month, self.year):
-            if val:
-                res.append(val)
-
-            else:
-                continue
-
-        else:
-            return tuple(res)
+        return (self.day, self.month, self.year)
 
     def date_or_tuple(self):
         """
-        Returns datetime object if all needed parameters are known. Otherwise returns tuple of known parameters.
+        Returns datetime object if all needed parameters are known. Otherwise returns tuple of all parameters.
         It's not recommended to use because it can return different types, but in some cases it may be useful.
 
         :return: datetime object or tuple
