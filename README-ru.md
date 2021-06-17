@@ -14,8 +14,7 @@
 ---
 
 ## Класс:
-` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError. **See the section *Formats* to discover default Datify's formats.**
-: принимает `user_input: str` при создании. Также может принимать именованые аргументы `year`, `month` и `day` вместе с `user_input` или без него. Если ни один параметр не задан, поднимает ValueError. **См. секцию *Форматы*, чтобы ознакомиться со стандартными форматами Datify.**
+` Datify(user_input, year, month, date) ` : принимает `user_input: str` при создании. Также может принимать именованые аргументы `year`, `month` и `day` вместе с `user_input` или без него. Если ни один параметр не задан, поднимает ValueError. **См. секцию *Форматы*, чтобы ознакомиться со стандартными форматами Datify.**
 ### Методы класса:
   #### Статические:
   1. `findDate(string)` : Принимает str. Возвращает подстроку с датой в формате General Date Format если она содержится в заданной строке. Иначе возвращает None.
