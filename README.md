@@ -13,7 +13,7 @@ Simply run `pip install datify` from your command line (pip must be installed).
 
 
 ## Class:
-` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError. **See the section *Formats* to discover default Datify's formats.**
+` Datify(user_input, year, month, date) ` : takes str when creating. Also, can take particular parameters like `year`, `month`, and `day` along with user input or without it. If no parameters are given, raises ValueError. **See the section [*Formats*](#default-formats) to discover default Datify's formats.**
 ### Class methods:
   #### Static:
   1. `findDate(string)` : Takes string. Returns substring with date in General Date format if it is contained in the given string.
@@ -22,7 +22,7 @@ Simply run `pip install datify` from your command line (pip must be installed).
   4. `isAlphaMonth(string)` : Takes str. Returns True if given string suits months dictionary. *For languages in which there are multiple forms of words it's basically enough to have only the main form of the word in dictionary.*
   5. `getAlphaMonth(string)` :  Takes str. Returns number(int) of month name in given string according to months dictionary. If no month name is found in the string, returns None.
   6. `isDay(day)` : Takes str or int. Returns True if given parameter suits day format.
-  7. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section *Default formats*).
+  7. `isDate(date)` : Takes str or int. Returns True if given parameter suits general date format (See the section [*Formats*](#default-formats)).
   8. `isDatePart(string)` : Takes str. Returns True if given string contains at least one of date parts such as day, month, or year.
 
   #### Instance:
@@ -53,7 +53,7 @@ Simply run `pip install datify` from your command line (pip must be installed).
 You can customize splitters list, and change format of the all date parts, accessing them using `Datify.config['KEY']`.
 n. Name : KEY -- description
 1. Splitters : `'SPLITTERS'` -- set of the separators for `Datify._getWordsList`. Contains ` `, `.`, `-`, and `/` by default.
-2. Formats (See section *Default formats*) :
+2. Formats (See section [*Formats*](#default-formats)) :
   - Digit day : `'FORMAT_DAY_DIGIT'`
   - Alpha-numeric day : `'FORMAT_DAY_ALNUM'`
   - Digit month : `'FORMAT_MONTH_DIGIT'`
