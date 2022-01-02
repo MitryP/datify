@@ -60,12 +60,19 @@
   - Digit Month : `'FORMAT_MONTH_DIGIT'`
   - Digit Year : `'FORMAT_YEAR_DIGIT'`
   - General Date : `'FORMAT_DATE'`
+3. День проверяется первым? : `'DAY_FIRST'` -- bool. Если True, то первым проверяется день. Если False, то первым проверяется месяц. По умолчанию True.
  
 Например:
 ```python
 Datify('17_06_2021')  # ValueError
 Datify.config['SPLITTERS'].add('_')  # Добавляем нужный разделитель в конфиг
 Datify('17_06_2021')  # <Datify object (17, 6, 2021)>
+```
+Изменение порядка проверки дня и месяца:
+```python
+Datify('10.12').month  # 12
+Datify.config['DAY_FIRST'] = False
+Datify('10.12').month  # 10
 ```
 
 ---
