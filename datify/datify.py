@@ -447,7 +447,7 @@ class Datify:
         Datify.month_format_digit = config['FORMAT_MONTH_DIGIT']
         Datify.year_format = config['FORMAT_YEAR_DIGIT']
         Datify.date_format = config['FORMAT_DATE']
-        Datify.day_first = config["DAY_FIRST"]
+        Datify.day_first = config['DAY_FIRST']
 
     def __repr__(self) -> str:
         """
