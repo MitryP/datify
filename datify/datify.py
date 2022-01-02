@@ -4,8 +4,8 @@
 """This module allows to extract valid date from user input.
 Datify can identify separate parts of dates, e.g. '2021', 'july', '6th'.
 Also, module functions can be used to identify separate parts of date through class' static methods:
-is_day(day), is_year(year), is_digit_month(month) for digit representation of month, and is_alpha_month(month) for alphabethic
-representation of month.
+is_day(day), is_year(year), is_digit_month(month) for digit representation of month, and is_alpha_month(month) for
+alphabetic representation of month name.
 User input is processed through class 'Datify'. Code  `Datify(string).date()`  will return datetime object if all
 parameters were given in the string. Otherwise it will raise TypeError. To get tuple of all available fields from
 string use  `Datify(string).tuple()` To get datetime object or tuple if datetime is unable to be created use
@@ -35,14 +35,16 @@ import re
 from datetime import datetime
 from typing import Optional, Union, Dict
 
-config: Dict[str, Union[set, str]] = {
+config: Dict[str, Union[set, str, bool]] = {
     'SPLITTERS': {' ', '/', '.', '-'},
 
     'FORMAT_DAY_DIGIT': r'[0123]?\d$',
     'FORMAT_DAY_ALNUM': r'[0123]?\d\D+$',
     'FORMAT_MONTH_DIGIT': r'[01]?\d$',
     'FORMAT_YEAR_DIGIT': r'([012]\d\d\d$)|(\d\d$)',
-    'FORMAT_DATE': r'[12][01]\d\d[01]\d[0123]\d$'
+    'FORMAT_DATE': r'[12][01]\d\d[01]\d[0123]\d$',
+
+    'DAY_FIRST': True
 }
 
 Months: Dict[tuple, int] = {
@@ -61,7 +63,7 @@ Months: Dict[tuple, int] = {
 }
 
 
-def _isSameWord(str1: str, str2: str) -> bool:
+def _is_same_word(str1: str, str2: str) -> bool:
     """
     Tries to figure if given strings are the same words in different forms.
     Returns True or False.
@@ -75,7 +77,7 @@ def _isSameWord(str1: str, str2: str) -> bool:
             str1[0:2] == str2[0:2] if len(str1) < 4 else str1[0:3] == str2[0:3])
 
 
-def _getWordsList(string: str) -> Optional[list]:
+def _get_words_list(string: str) -> Optional[list]:
     """
     Returns list of string's elements if given string contains one of the separators. Otherwise returns None.
     :param string: Takes str
@@ -93,12 +95,13 @@ def _getWordsList(string: str) -> Optional[list]:
 class Datify:
     config: dict = config
 
-    splitters: set = config['SPLITTERS']
-    day_format_digit: str = config['FORMAT_DAY_DIGIT']
-    day_format_alnum: str = config['FORMAT_DAY_ALNUM']
-    month_format_digit: str = config['FORMAT_MONTH_DIGIT']
-    year_format: str = config['FORMAT_YEAR_DIGIT']
-    date_format: str = config['FORMAT_DATE']
+    splitters: set
+    day_format_digit: str
+    day_format_alnum: str
+    month_format_digit: str
+    year_format: str
+    date_format: str
+    day_first: bool
 
     def __init__(self, user_input: Optional[str] = None, year: Optional[int] = None,
                  month: Optional[int] = None, day: Optional[int] = None) -> None:
@@ -111,22 +114,36 @@ class Datify:
         :param day: Takes int, optional
         """
 
+        self.setup_variables()
         self.day, self.month, self.year, self.lost = day, month, year, list()
         if user_input:
-            words = _getWordsList(user_input)
+            words = _get_words_list(user_input)
             if words:
                 for word in words:
-                    if self.is_day(word) and not self.day:
-                        self.set_day(word)
+                    if self.day_first:
+                        if self.is_day(word) and not self.day:
+                            self.set_day(word)
 
-                    elif (self.is_digit_month(word) or self.is_alpha_month(word)) and not self.month:
-                        self.set_month(word)
+                        elif (self.is_digit_month(word) or self.is_alpha_month(word)) and not self.month:
+                            self.set_month(word)
 
-                    elif self.is_year(word) and not self.year:
-                        self.set_year(word)
+                        elif self.is_year(word) and not self.year:
+                            self.set_year(word)
 
+                        else:
+                            self.lost.append(word)
                     else:
-                        self.lost.append(word)
+                        if (self.is_digit_month(word) or self.is_alpha_month(word)) and not self.month:
+                            self.set_month(word)
+
+                        elif self.is_day(word) and not self.day:
+                            self.set_day(word)
+
+                        elif self.is_year(word) and not self.year:
+                            self.set_year(word)
+
+                        else:
+                            self.lost.append(word)
 
             elif user_input.isdigit() and len(user_input) > 4:
                 search = re.search(self.date_format, user_input)
@@ -168,7 +185,7 @@ class Datify:
         :return: bool
         """
 
-        words = _getWordsList(string)
+        words = _get_words_list(string)
         if words:
             for word in words:
                 if any([
@@ -307,7 +324,7 @@ class Datify:
                 return True
 
         for month in Months.keys():
-            if any(_isSameWord(word, month_name) for month_name in month):
+            if any(_is_same_word(word, month_name) for month_name in month):
                 return True
 
         else:
@@ -327,7 +344,7 @@ class Datify:
                 return Months[month]
 
         for month in Months.keys():
-            if any(_isSameWord(word, month_name) for month_name in month):
+            if any(_is_same_word(word, month_name) for month_name in month):
                 return Months[month]
 
         else:
@@ -417,5 +434,24 @@ class Datify:
         except TypeError:
             return self.tuple()
 
-    def __repr__(self):
+    @staticmethod
+    def setup_variables() -> None:
+        """
+        Sets class variables according to Datify.config values.
+        :return: None
+        """
+
+        Datify.splitters = config['SPLITTERS']
+        Datify.day_format_digit = config['FORMAT_DAY_DIGIT']
+        Datify.day_format_alnum = config['FORMAT_DAY_ALNUM']
+        Datify.month_format_digit = config['FORMAT_MONTH_DIGIT']
+        Datify.year_format = config['FORMAT_YEAR_DIGIT']
+        Datify.date_format = config['FORMAT_DATE']
+        Datify.day_first = config["DAY_FIRST"]
+
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the object.
+        :return: str
+        """
         return f'<Datify object {self.tuple()}>'
