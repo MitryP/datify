@@ -51,6 +51,7 @@ Simply run `pip install datify` from your command line (pip must be installed).
 
 ## Config:
 You can customize splitters list, and change format of the all date parts, accessing them using `Datify.config['KEY']`.
+Also, you can choose, what is coming first: a day or a month.
 
 Dict keys:
 1. Splitters : `'SPLITTERS'` -- set of the separators. Contains ` `, `.`, `-`, and `/` by default.
@@ -60,12 +61,19 @@ Dict keys:
   - Digit month : `'FORMAT_MONTH_DIGIT'`
   - Digit year : `'FORMAT_YEAR_DIGIT'`
   - General date : `'FORMAT_DATE'`
+3. Day is first? : `'DAY_FIRST'` -- bool. If True, a day is being found first. If False, a month is being found first. True by default.
 
 For example:
 ```python
 Datify('17_06_2021')  # ValueError  # Not works
 Datify.config['SPLITTERS'].add('_')  # Adding new separator to the set
 Datify('17_06_2021')  # <Datify object (17, 6, 2021)>  # Works!
+```
+Changing the order of a day and a month:
+```python
+Datify('10.12').month  # 12
+Datify.config['DAY_FIRST'] = False
+Datify('10.12').month  # 10
 ```
 
 ---
