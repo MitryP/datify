@@ -120,6 +120,10 @@ class Datify:
             words = _get_words_list(user_input)
             if words:
                 for word in words:
+                    if Datify.is_alpha_month(word):
+                        self.set_month(word)
+
+                for word in words:
                     if self.day_first:
                         if self.is_day(word) and not self.day:
                             self.set_day(word)

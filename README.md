@@ -1,5 +1,5 @@
 # Datify
-This Python3 module allows to extract parts of valid date from user input.
+This Python3 module allows extracting parts of valid date from user input.
 User input is processed through class `Datify`.
 ## Languages supported: 
 - [x] English
