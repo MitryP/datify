@@ -38,11 +38,11 @@ from typing import Optional, Union, Dict
 config: Dict[str, Union[set, str, bool]] = {
     'SPLITTERS': {' ', '/', '.', '-'},
 
-    'FORMAT_DAY_DIGIT': r'([012]?\d$)|3[01]$',
-    'FORMAT_DAY_ALNUM': r'[0123]?\d\D+$',
-    'FORMAT_MONTH_DIGIT': r'(0?\d$)|1[012]$',
+    'FORMAT_DAY_DIGIT': r'(([012]?\d)||(3[01]))$',
+    'FORMAT_DAY_ALNUM': r'([012]?\d\D+$)|(3[01]\D+$)',
+    'FORMAT_MONTH_DIGIT': r'((0?\d)|(1[012]))$',
     'FORMAT_YEAR_DIGIT': r'([012]\d\d\d$)|(\d\d$)',
-    'FORMAT_DATE': r'[12][01]\d\d[01]\d[0123]\d$',
+    'FORMAT_DATE': r'([12][01]\d\d0\d(([012]\d)|3[01]))$)',
 
     'DAY_FIRST': True
 }
