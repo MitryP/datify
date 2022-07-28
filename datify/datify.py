@@ -284,7 +284,7 @@ class Datify:
                 self.day = int(day)
 
             elif re.match(Datify.day_format_alnum, day):
-                day_re = re.search(Datify.day_format_digit[0:-1], day)
+                day_re = re.search(Datify.day_format_digit, day)
 
                 if day_re:
                     day_str = day_re.group(0)
