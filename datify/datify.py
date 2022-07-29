@@ -31,10 +31,12 @@ Datify(str).date_or_tuple() -> datetime object or tuple
 Extended version of documentation can be found at GitHub: https://github.com/MitryP/datify/
 """
 import re
-
 from datetime import datetime
 from typing import Optional, Union, Dict
 
+from datify.deprecation_warning import deprecated
+
+# deprecated
 config: Dict[str, Union[set, str, bool]] = {
     'SPLITTERS': {' ', '/', '.', '-'},
 
@@ -47,6 +49,7 @@ config: Dict[str, Union[set, str, bool]] = {
     'DAY_FIRST': True
 }
 
+# deprecated, will be replaced with an extensible storage in the future
 Months: Dict[tuple, int] = {
     ('january', 'jan', 'январь', 'січень'): 1,
     ('february', 'feb', 'февраль', 'лютий'): 2,
@@ -74,7 +77,7 @@ def _is_same_word(str1: str, str2: str) -> bool:
 
     return (len(set(str1).difference(set(str2))) < len(str1) / 2) and (
             len(set(str2).difference(set(str1))) < len(str2) / 2) and (
-            str1[0:2] == str2[0:2] if len(str1) < 4 else str1[0:3] == str2[0:3])
+               str1[0:2] == str2[0:2] if len(str1) < 4 else str1[0:3] == str2[0:3])
 
 
 def _get_words_list(string: str) -> Optional[list]:
@@ -93,6 +96,7 @@ def _get_words_list(string: str) -> Optional[list]:
 
 
 class Datify:
+    # deprecated, will be replaced with a class in 1.2.0
     config: dict = config
 
     splitters: set
@@ -181,6 +185,8 @@ class Datify:
             raise ValueError('no date parts were found')
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def is_date_part(string: str) -> bool:
         """
         Returns True if given string contains parts of date in formats supported by Datify.
@@ -205,14 +211,16 @@ class Datify:
 
         else:
             return any([
-                    Datify.is_day(string),
-                    Datify.is_digit_month(string),
-                    Datify.is_alpha_month(string),
-                    Datify.is_year(string),
-                    Datify.is_date(string)
-                ])
+                Datify.is_day(string),
+                Datify.is_digit_month(string),
+                Datify.is_alpha_month(string),
+                Datify.is_year(string),
+                Datify.is_date(string)
+            ])
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def is_date(date: Union[str, int]) -> bool:
         """
         Returns True if given parameter suits format of date ('YYYYMMDD' by default).
@@ -230,6 +238,8 @@ class Datify:
             return False
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def find_date(string: str) -> Optional[str]:
         """
         Returns date in general date format from given string if present. Otherwise, returns None
@@ -246,6 +256,8 @@ class Datify:
             return None
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def is_day(day: Union[str, int]) -> bool:
         """
         Returns True if given parameter is suits the day format: e.g. '09' or '9,' or '9th'.
@@ -270,6 +282,8 @@ class Datify:
             else:
                 return False
 
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def set_day(self, day: Union[str, int]) -> None:
         """
         Sets day of Datify's object.
@@ -297,6 +311,8 @@ class Datify:
             raise ValueError
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def is_digit_month(month: Union[str, int]) -> bool:
         """
         Returns True if the given parameter suits digit month format: e.g. '09' or '9'.
@@ -314,6 +330,8 @@ class Datify:
             return False
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def is_alpha_month(string: str) -> bool:
         """
         Returns True if given parameter suits alpha month format: e.g. 'January' or 'jan' or 'январь' or 'января'.
@@ -335,6 +353,8 @@ class Datify:
             return False
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def get_alpha_month(string: str) -> Optional[int]:
         """
         Returns number of given month name. If not found, returns None.
@@ -354,6 +374,8 @@ class Datify:
         else:
             return None
 
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def set_month(self, month: Union[str, int]) -> None:
         """
         Sets month of Datify's object. Takes number of a month or its name.
@@ -374,6 +396,8 @@ class Datify:
             raise ValueError
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def is_year(year: Union[str, int]) -> bool:
         """
         Returns True if given parameter is suitable for the year format: e.g. '14' or '2014'.
@@ -390,6 +414,8 @@ class Datify:
         else:
             return False
 
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def set_year(self, year: Union[str, int]) -> None:
         """
         Sets year of Datify's object.
@@ -425,6 +451,8 @@ class Datify:
 
         return self.day, self.month, self.year
 
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def date_or_tuple(self) -> Union[datetime, tuple]:
         """
         Returns datetime object if all needed parameters are known. Otherwise returns tuple of all parameters.
@@ -439,6 +467,7 @@ class Datify:
             return self.tuple()
 
     @staticmethod
+    @deprecated('The methods with rare usage cases are not supported anymore', '1.1.0', '2.0.0', silent=True)
     def setup_variables() -> None:
         """
         Sets class variables according to Datify.config values.
