@@ -1,1 +1,1 @@
-from datify.datify import Datify
+from datify.datify import Datify, DatifyConfig
