@@ -219,3 +219,14 @@ if __name__ == '__main__':
     for date in dates:
         print(f'{date}: {handle_request({"date": date})}')
 ```
+
+The output of the example above:
+```plaintext
+31.12.2021: New Year party 🎄
+2022-02-23: The cinema attendance 📽
+23-02/2022: The cinema attendance 📽
+20 of January: Birthday celebration 🎁
+May: A long-awaited Moment 🔥
+14 лютого 2022: St. Valentines Day 💖
+not a date: No events found for this query 👀
+```
