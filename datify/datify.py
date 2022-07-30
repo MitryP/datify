@@ -1,78 +1,43 @@
 # encoding: utf-8
 # module datify
 
-"""This module allows to extract valid date from user input.
-Datify can identify separate parts of dates, e.g. '2021', 'july', '6th'.
-Also, module functions can be used to identify separate parts of date through class' static methods:
-is_day(day), is_year(year), is_digit_month(month) for digit representation of month, and is_alpha_month(month) for
-alphabetic representation of month name.
-User input is processed through class 'Datify'. Code  `Datify(string).date()`  will return datetime object if all
-parameters were given in the string. Otherwise it will raise TypeError. To get tuple of all available fields from
-string use  `Datify(string).tuple()` To get datetime object or tuple if datetime is unable to be created use
-`Datify(string).date_or_tuple()`
-Languages supported: English, Russian, Ukrainian.
+"""An extensible library that provides the functionality of the parsing strings in different formats to extract dates.
+
+**Datify** makes it easy to extract dates from strings in *(nearly)* any formats.
+
+You will need only to parse the date string with Datify, and it's all good.
+
+The date formats supported by Datify are the following:
+
+* Day first digit-only dates: 20.02.2020, 09/07/2000, 9-1-2005;
+* Month first digit-only dates: 02 22 2020, 09.07.2000, 1.9/2005;
+* Dates in the general date format: 2020-04-15;
+* **Alphanumeric dates in different languages**: 11th of July 2020; 6 липня 2021; 31 декабря, 2021.
+
+Month locales supported: English, Russian, Ukrainian.
+It is possible to add more month name localizations. See the documentation of DatifyConfig class for more information.
+
 ===
-Datify can handle all of the cases of user input listed below and may work with some other cases. Try by yourself before
-using:
-'06.06.2021'                # Also, '-', '/', and ' ' can be used as separators instead '.', and new separators can be
-'6/6/2021'                  # added to  `config['Separators']`
-'July, 6th, 2021'
-'6th of July, 2021'
-'Декабрь, 6, 2021'
-'6 декабря 2021 года'
-'20 січня 2020'
-and other.
-===
-Getting result:
-Datify(str).date() -> datetime object or TypeError
-Datify(str).tuple() -> tuple (day, month, year)
-Datify(str).date_or_tuple() -> datetime object or tuple
-===
-Extended version of documentation can be found at GitHub: https://github.com/MitryP/datify/
+Extended version of the library tour can be found at GitHub: https://github.com/mitryp/datify/
 """
+
+from __future__ import annotations
+
+import enum
 import re
+import warnings
 from datetime import datetime
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Sequence
 
 from datify.deprecation_warning import deprecated
 
-# deprecated
-config: Dict[str, Union[set, str, bool]] = {
-    'SPLITTERS': {' ', '/', '.', '-'},
-
-    'FORMAT_DAY_DIGIT': r'\b(([1-9])|([12]\d)|(3[01]))(\b|(?=\D))',
-    'FORMAT_DAY_ALNUM': r'\b(([1-9])|([12]\d)|(3[01]))(\b|(?=\D))',
-    'FORMAT_MONTH_DIGIT': r'\b((0?[1-9])|(1[012]))\b',
-    'FORMAT_YEAR_DIGIT': r'\b[12]\d\d\d\b',
-    'FORMAT_DATE': r'\b[12]\d\d\d((0[1-9])|(1[012]))(([012]\d)|(3[01]))\b',
-
-    'DAY_FIRST': True
-}
-
-# deprecated, will be replaced with an extensible storage in the future
-Months: Dict[tuple, int] = {
-    ('january', 'jan', 'январь', 'січень'): 1,
-    ('february', 'feb', 'февраль', 'лютий'): 2,
-    ('march', 'mar', 'март', 'березень'): 3,
-    ('april', 'apr', 'апрель', 'квітень'): 4,
-    ('may', 'май', 'травень'): 5,
-    ('june', 'jun', 'июнь', 'червень'): 6,
-    ('july', 'jul', 'июль', 'липень'): 7,
-    ('august', 'aug', 'август', 'серпень'): 8,
-    ('september', 'sep', 'сентябрь', 'вересень'): 9,
-    ('october', 'oct', 'октябрь', 'жовтень'): 10,
-    ('november', 'nov', 'ноябрь', 'листопад'): 11,
-    ('december', 'dec', 'декабрь', 'грудень'): 12
-}
-
 
 def _is_same_word(str1: str, str2: str) -> bool:
-    """
-    Tries to figure if given strings are the same words in different forms.
-    Returns True or False.
+    """Tries to figure if given strings are the same words in different forms.
+
     :param str1: str
     :param str2: str
-    :return: Bool
+    :return: bool
     """
 
     return (len(set(str1).difference(set(str2))) < len(str1) / 2) and (
@@ -81,24 +46,268 @@ def _is_same_word(str1: str, str2: str) -> bool:
 
 
 def _get_words_list(string: str) -> Optional[list]:
-    """
-    Returns list of string's elements if given string contains one of the separators. Otherwise returns None.
-    :param string: Takes str
-    :return: list or None
+    """Returns a list of words in a string split with supported separators.
+    If the string does not contain any separators, returns the list with one element of the string.
+
+    :param string: the string to be split into words
+    :return: the list of words in the string
     """
 
-    for splitter in Datify.splitters:
-        if string.find(splitter) > 0:
-            return string.split(splitter)
+    return re.split(DatifyConfig.separators_pattern(), string)
 
-    else:
-        return None
+
+def _get_alphabetic_month_ordinal(month_name: str) -> int | None:
+    """Returns an integer representing the ordinal of the given month name.
+
+    If the given string cannot be interpreted as a valid month name, returns None.
+
+    :param month_name: a month name to be parsed to an integer ordinal
+    :return: the ordinal of the given month name if the valid month name is given, else None
+    """
+
+    normalized_month_name = _normalize_month_name(month_name)
+
+    # check if the month name itself is contained in any of the month name sets
+    for n in range(len(DatifyConfig.months)):
+        if normalized_month_name in DatifyConfig.months[n]:
+            return n + 1
+
+    # check if the month name appears to be another form of the month name contained in the sets
+    for n in range(len(DatifyConfig.months)):
+        for month in DatifyConfig.months[n]:
+            if _is_same_word(normalized_month_name, month):
+                return n + 1
+
+    return None
+
+
+def _parse_string(string, year_defined: bool = False, month_defined: bool = False, day_defined: bool = False) -> tuple[
+        int | None, int | None, int | None]:
+    """Temporary function to parse a string into a tuple of (year, month, day).
+
+    :param string: a string to parse
+    :return: tuple of integers: (year, month, day)
+    """
+
+    # if all the date parts are defined by the user, don't parse the string
+    if year_defined and month_defined and day_defined:
+        return None, None, None
+
+    # try to find the general date format
+    general_date_match = string_match(DatifyConfig.date_format(), string)
+    if general_date_match is not None:
+        # clear the match from separators
+        clean_date = re.sub(DatifyConfig.separators_pattern(), '', general_date_match)
+
+        # parse the date parts, cast them to integers
+        year = int(clean_date[:4])
+        month = int(clean_date[4:6])
+        day = int(clean_date[6:8])
+
+        return tuple((year, month, day))
+
+    # split into date parts with separators
+    words = _get_words_list(string)
+
+    year, month, day = (None,) * 3
+
+    # to prevent losing the alphabetic month names when the day_first is set to False, try to find the alphabetic month
+    # before the actual parsing
+    if not DatifyConfig.day_first:
+        for word in words:
+            potential_month_ordinal = _get_alphabetic_month_ordinal(word)
+            if potential_month_ordinal is not None:
+                words.remove(word)
+                month_defined = True
+                month = potential_month_ordinal
+                break
+
+    parts_remaining = _DatePart.order(year_defined, month_defined, day_defined)
+
+    for word in words:
+        for date_part in parts_remaining:
+            part_match = string_match(date_part.value, word)
+
+            # if the part is not matching the current pattern, then it may be a month
+            if part_match is None:
+                # if the month was already defined, skip the part
+                if month is not None:
+                    continue
+
+                # try to define the month ordinal
+                month_ordinal = _get_alphabetic_month_ordinal(word)
+
+                # if unsuccessful, skip the part
+                if month_ordinal is None:
+                    continue
+
+                # define the month ordinal and remove month from the parts_remaining
+                month = month_ordinal
+                parts_remaining.remove(_DatePart.month)
+                continue
+
+            # parse the value of the part into an integer
+            value = int(part_match)
+
+            # set the value to the corresponding date part variable
+            if date_part == _DatePart.day:
+                day = value
+            elif date_part == _DatePart.month:
+                month = value
+            else:
+                year = value
+
+            # remove the part from the parts_remaining
+            parts_remaining.remove(date_part)
+
+    return year, month, day
+
+
+class DatifyConfig:
+    splitters: set[str] = {' ', '/', '.', '-'}
+    """The set of the splitters to be found in the parsed strings."""
+
+    day_first: bool = True
+    """The option to determine whether the day or the month should be found first"""
+
+    day_format: str = r'\b(([1-9])|([12]\d)|(3[01]))(\b|(?=\D))'
+    """The pattern matching the day of the date."""
+
+    month_format_digit: str = r'\b((0?[1-9])|(1[012]))\b'
+    """The pattern matching the digit representation of the month of the date."""
+
+    year_format: str = r'\b[12]\d\d\d\b'
+    """The pattern matching the year of the date."""
+
+    _date_format: str = r'\b[12]\d\d\d$$((0[1-9])|(1[012]))$$(([012]\d)|(3[01]))\b'
+    """The pattern matching the general date format with the '$$' placeholders at the places where the separator 
+    patterns should be placed."""
+
+    months: list[set[str]] = [
+        {'january', 'jan', 'січень', 'январь'},
+        {'february', 'feb', 'лютий', 'февраль'},
+        {'march', 'mar', 'березень', 'март'},
+        {'april', 'apr', 'квітень', 'апрель'},
+        {'may', 'травень', 'май'},
+        {'june', 'jun', 'червень', 'июнь'},
+        {'july', 'jul', 'липень', 'июль'},
+        {'august', 'aug', 'серпень', 'август'},
+        {'september', 'sep', 'вересень', 'сентябрь'},
+        {'october', 'oct', 'жовтень', 'октябрь'},
+        {'november', 'nov', 'листопад', 'ноябрь'},
+        {'december', 'dec', 'грудень', 'декабрь'}
+    ]
+    """The list of sets representing the specified month names. New localizations can be added with the DatifyConfig 
+    methods 
+    'add_month_name(int, str)' and 'add_months_locale(Sequence[str])'.
+    """
+
+    @classmethod
+    def separators_pattern(cls) -> str:
+        """Returns a pattern that matches any supported separators."""
+
+        # replace is needed because the re.escape() escapes the `space` character for some reason
+        return f"({'|'.join(map(re.escape, cls.splitters))})".replace('\\ ', ' ')
+
+    @classmethod
+    def date_format(cls) -> str:
+        """Returns a date format with the separator placeholder replaced with the latest separator pattern."""
+
+        return cls._date_format.replace('$$', f'{cls.separators_pattern()}?')
+
+    @classmethod
+    def add_month_name(cls, ordinal: int, name: str) -> None:
+        """Adds a new name to the month names set with the given ordinal.
+
+        The `ordinal` argument is the number of the month the name to be added to. It must be in range of [1, 12]
+        inclusive, otherwise the ValueError will be raised.
+
+        :param ordinal: the ordinal of the month the new name to be added to
+        :param name: a new name to be added to the month
+        :return: None
+        """
+
+        # check if the ordinal is within the specified range
+        if ordinal not in range(1, 13):
+            raise ValueError('Invalid month ordinal {}. Month ordinals must be in range from 1 to 12 inclusive'
+                             .format(ordinal))
+
+        # add a normalized month name to the month names set with the given ordinal
+        cls.months[ordinal].add(_normalize_month_name(name))
+
+    @classmethod
+    def add_months_locale(cls, locale: Sequence[str]):
+        """The method to add a localization of months to the Datify config.
+
+        The `locale` argument is a sequence of unique strings with the length of 12 representing the months names
+        ordered in the month order.
+
+        If the sequence has the length that is not equal to 12 or contains not unique elements, the Value
+
+        :param locale:
+        :return:
+        """
+
+        # check the length of the sequence
+        set_length = len(set(locale))
+        if len(locale) != 12 or set_length != 12:
+            raise ValueError('Invalid number of months: {}. `locales` must be a collection of 12 unique month names '
+                             'ordered in the months order'.format(set_length))
+
+        # add each month to the config
+        for i in range(len(cls.months)):
+            cls.months[i].add(_normalize_month_name(locale[i]))
+
+
+class _DatePart(enum.Enum):
+    """The enum representing a date part during the date parsing process.
+
+    Each date part has a corresponding format RegExp pattern that matches the part.
+
+    _DatePart.order() returns a tuple consisting of the date parts based on the DatifyConfig.day_first setting and the
+    date parts that are already defined.
+    """
+
+    year = DatifyConfig.year_format
+    month = DatifyConfig.month_format_digit
+    day = DatifyConfig.day_format
+
+    @staticmethod
+    def order(year_defined: bool = False, month_defined: bool = False, day_defined: bool = False) -> list[_DatePart]:
+        """Returns a list of the date parts ordered according to the DatifyConfig.day_first setting.
+
+        The returned list does not include the date parts that were already defined before.
+
+        :param year_defined: whether to include the year part in the returned list
+        :param month_defined: whether to include the month part in the returned list
+        :param day_defined: whether to include the day part in the returned list
+        :return: list of the parts ordered in the parsing order not including the parts that were already defined
+        """
+        res: list[_DatePart]
+
+        # specify the initial order based on the day_first setting of the datify config
+        if DatifyConfig.day_first:
+            res = [_DatePart.day, _DatePart.month, _DatePart.year]
+        else:
+            res = [_DatePart.month, _DatePart.day, _DatePart.year]
+
+        # remove the date parts that were already defined before
+        if year_defined:
+            res.remove(_DatePart.year)
+
+        if month_defined:
+            res.remove(_DatePart.month)
+
+        if day_defined:
+            res.remove(_DatePart.day)
+
+        return res
 
 
 class Datify:
-    # deprecated, will be replaced with a class in 1.2.0
-    config: dict = config
+    config: DatifyConfig = DatifyConfig
 
+    # deprecated functionality left for backwards compatibility, will be removed at 2.0.0
     splitters: set
     day_format_digit: str
     day_format_alnum: str
@@ -107,90 +316,105 @@ class Datify:
     date_format: str
     day_first: bool
 
-    def __init__(self, user_input: Optional[str] = None, year: Optional[int] = None,
-                 month: Optional[int] = None, day: Optional[int] = None) -> None:
+    year: int | None
+    month: int | None
+    day: int | None
+
+    def __init__(self, user_input: str | None = None, year: int | None = None,
+                 month: int | None = None, day: int | None = None):
+        """Creates a new Datify instance.
+
+        If the user_input argument is given, it will be parsed to extract a date parts from the input.
+        Also, can take separate parameters `year`, `month` and `day`.
+        If those are given, they will override the corresponding parsed values.
+
+        **The signature will be changed to Datify(year: int?, month: int?, day: int?) in the version 2.0.0.**
+        **To parse the string the Datify.parse(string) factory will be used then. Consider changing to that method right
+        now.**
+
+        :param user_input: str: a string input to be parsed into a date parts
+        :param year: int: the value of the year to force set to the year field
+        :param month: int: the value of the month to force set to the month field
+        :param day: int: the value of the day to force set to the day field
         """
-        Datify class. Tries to extract day, month, and year from given string. Also, can take separate parameters.
-        If no parameters are given, raises ValueError.
-        :param user_input: Takes str, optional
-        :param year: Takes int, optional
-        :param month: Takes int, optional
-        :param day: Takes int, optional
-        """
+        self.setup_variables()  # deprecated functionality left for backwards compatibility, will be removed in 2.0.0
+        self._initialize_datify()
 
-        self.setup_variables()
-        self.day, self.month, self.year, self.lost = day, month, year, list()
-        if user_input:
-            words = _get_words_list(user_input)
-            if words:
-                for word in words:
-                    if Datify.is_alpha_month(word):
-                        self.set_month(word)
+        if user_input is not None:
+            warnings.warn('`user_input` argument is deprecated since 1.1.0 and will be removed in 2.0.0, please '
+                          'consider using Datify.parse(string) instead', DeprecationWarning, stacklevel=2)
+            self.year, self.month, self.day = _parse_string(user_input)
 
-                for word in words:
-                    if self.day_first:
-                        if self.is_day(word) and not self.day:
-                            self.set_day(word)
-
-                        elif (self.is_digit_month(word) or self.is_alpha_month(word)) and not self.month:
-                            self.set_month(word)
-
-                        elif self.is_year(word) and not self.year:
-                            self.set_year(word)
-
-                        else:
-                            self.lost.append(word)
-                    else:
-                        if (self.is_digit_month(word) or self.is_alpha_month(word)) and not self.month:
-                            self.set_month(word)
-
-                        elif self.is_day(word) and not self.day:
-                            self.set_day(word)
-
-                        elif self.is_year(word) and not self.year:
-                            self.set_year(word)
-
-                        else:
-                            self.lost.append(word)
-
-            elif user_input.isdigit() and len(user_input) > 4:
-                search = re.search(self.date_format, user_input)
-                if search:
-                    search_str = search.group(0)
-                    self.set_year(search_str[0:4])
-                    self.set_month(search_str[4:6])
-                    self.set_day(search_str[6:8])
-
-                else:
-                    raise ValueError('date was not found')
-
-            elif self.is_day(user_input):
-                self.set_day(user_input)
-
-            elif self.is_alpha_month(user_input):
-                self.set_month(user_input)
-
-            elif self.is_year(user_input):
-                self.set_year(user_input)
-
-            else:
-                raise ValueError('unsupported format')
-
-        elif any((year, month, day)):
+        if year is not None:
             self.year = year
+
+        if month is not None:
             self.month = month
+
+        if day is not None:
             self.day = day
 
-        else:
-            raise ValueError('no date parts were found')
+    @classmethod
+    def parse(cls, string: str, year: int | None = None, month: int | None = None, day: int | None = None) -> Datify:
+        """Parses the given string and returns a Datify object with the parsed values.
+
+        Tries to extract a year, month and day from the string according to the DatifyConfig settings.
+
+        Can also take an optional year, month and day as arguments. The given values of the parameters are force set
+        to the corresponding fields of the Datify object returned.
+
+        Can parse the following formats:
+
+        * Digit-only (or separated with a supported separators) general date format: YYYY$?MM$?DD - e.g. '2021.12.31',
+          '2022-01-20', '20220214' etc.;
+        * Common separated digit date format: DD$MM$YYYY - e.g. '31.12.2021', '20.1.2022', '14.02.2022' etc.;
+        * American separated digit date format (month is first): MM$DD$YYYY - e.g. '12.31.2021', '01.20.2022',
+          '2.14.2022' etc.;
+        * **Date formats with localized month names** - e.g. '31st of December 2021', '1 квітня 2022', '14 февраля 2022'
+          etc.
+
+        In the formats above, the `$` sign stands for any of the supported date separators, which are stored in the
+        `DatifyConfig.splitters` field. The external splitters can be added - see the DatifyConfig documentation.
+        The `$?` sign stands for optional supported separator (can or can not be present in the input string).
+
+        The following month locales are supported:
+
+        * English (January)
+        * English shortened (Jan)
+        * Ukrainian (січень)
+        * Russian (январь)
+
+        You can also add new locales to the DatifyConfig with the methods below:
+
+        * DatifyConfig.add_month_name(cls, ordinal: int, name: str) - adds a new name for the month with the given
+          ordinal number. If the ordinal is not in the range of [1, 12] inclusive, the ValueError will be raised.
+          For instance, to add a new name for the 3rd month, the following syntax is used:
+
+          ```DatifyConfig.add_month_name(3, 'march')```
+        * DatifyConfig.add_months_locale(cls, locale: Sequence[str]) - adds a new locale for the month names.
+          The `locale` argument is a sequence of unique strings with the length of 12. The month names should be ordered
+          in the month order. If the length of the sequence is not equal to 12 or the sequence contains duplicates, the
+          ValueError is raised.
+
+        :param string: an input string to be parsed into a Datify object
+        :param year: a predefined year to be force set
+        :param month: a predefined month to be force set
+        :param day: a predefined day to be force set
+        :return: Datify object with the values parsed from the input string
+        """
+
+        parsed_year, parsed_month, parsed_day = _parse_string(string)
+        d = Datify(None, year or parsed_year, month or parsed_month, day or parsed_day)
+        return d
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
     def is_date_part(string: str) -> bool:
-        """
-        Returns True if given string contains parts of date in formats supported by Datify.
-        Returns True or False.
+        """Returns True if the given string contains parts of date in formats supported by Datify.
+        Otherwise, returns False.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param string: Takes str
         :return: bool
         """
@@ -198,265 +422,226 @@ class Datify:
         words = _get_words_list(string)
         if words:
             for word in words:
-                if any([
-                    Datify.is_day(word),
-                    Datify.is_digit_month(word),
-                    Datify.is_alpha_month(word),
-                    Datify.is_year(word)
-                ]):
+                if any((
+                        Datify.is_day(word),
+                        Datify.is_digit_month(word),
+                        Datify.is_alpha_month(word),
+                        Datify.is_year(word)
+                )):
                     return True
 
-            else:
-                return False
+            return False
 
         else:
-            return any([
+            return any((
                 Datify.is_day(string),
                 Datify.is_digit_month(string),
                 Datify.is_alpha_month(string),
                 Datify.is_year(string),
                 Datify.is_date(string)
-            ])
+            ))
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
-    def is_date(date: Union[str, int]) -> bool:
-        """
-        Returns True if given parameter suits format of date ('YYYYMMDD' by default).
-        Returns True or False
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
+    def is_date(date: str | int) -> bool:
+        """Returns True if given parameter suits format of date ('YYYYMMDD' by default).
+        Otherwise, returns False.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param date: Takes str
         :return: bool
         """
 
         date = str(date)
-
-        if re.match(Datify.date_format, date):
-            return True
-
-        else:
-            return False
+        return re.match(DatifyConfig.date_format(), date) is not None
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
-    def find_date(string: str) -> Optional[str]:
-        """
-        Returns date in general date format from given string if present. Otherwise, returns None
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
+    def find_date(string: str) -> str | None:
+        """Returns date in general date format from given string if present.
+        Otherwise, returns None.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param string: Takes str
-        :return: str or None
+        :return: str | None
         """
 
-        res = re.search(Datify.date_format[:-1], string)
-
-        if res:
-            return res.group(0)
-
-        else:
-            return None
+        res = re.search(DatifyConfig.date_format(), string)
+        return res.group(0) if res else None
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
-    def is_day(day: Union[str, int]) -> bool:
-        """
-        Returns True if given parameter is suits the day format: e.g. '09' or '9,' or '9th'.
-        Returns True or False
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
+    def is_day(day: str | int) -> bool:
+        """Returns True if the given argument suits the day format: e.g. '09' or '9,' or '9th'.
+        Otherwise, returns False.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param day: Takes str
         :return: bool
         """
 
         day = str(day)
+        return re.match(DatifyConfig.day_format, day) is not None
 
-        if day.isdigit():
-            if re.match(Datify.day_format_digit, day) and 0 < int(day) <= 31:
-                return True
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
+    def set_day(self, day: int | str) -> None:
+        """Sets day of the Datify object.
 
-            else:
-                return False
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
 
-        else:
-            if re.match(Datify.day_format_alnum, day):
-                return True
-
-            else:
-                return False
-
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
-    def set_day(self, day: Union[str, int]) -> None:
-        """
-        Sets day of Datify's object.
         :param day: Takes str or int
         :return: no return
         """
 
-        day = str(day)
+        day = str(day).strip()
 
         if Datify.is_day(day):
             if day.isdigit():
                 self.day = int(day)
+                return
 
-            elif re.match(Datify.day_format_alnum, day):
-                day_re = re.search(Datify.day_format_digit, day)
-
-                if day_re:
-                    day_str = day_re.group(0)
-                    self.day = int(day_str)
-
-                else:
-                    raise ValueError
-
-        else:
-            raise ValueError
+            day_re = re.search(DatifyConfig.day_format, day)
+            if day_re:
+                day_str = day_re.group(0)
+                self.day = int(day_str)
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
-    def is_digit_month(month: Union[str, int]) -> bool:
-        """
-        Returns True if the given parameter suits digit month format: e.g. '09' or '9'.
-        Returns True or False.
-        :param month: Takes str
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
+    def is_digit_month(month: str | int) -> bool:
+        """Returns True if the given parameter suits digit month format: e.g. '09' or '9'.
+        Otherwise, returns False.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
+        :param month: Takes str or int
         :return: Bool
         """
 
-        month = str(month)
-
-        if re.match(Datify.month_format_digit, month) and 0 < int(month) <= 12:
-            return True
-
-        else:
-            return False
+        month = str(month).strip()
+        return re.match(DatifyConfig.month_format_digit, month) is not None
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
     def is_alpha_month(string: str) -> bool:
-        """
-        Returns True if given parameter suits alpha month format: e.g. 'January' or 'jan' or 'январь' or 'января'.
-        Returns True or False.
+        """Returns True if given parameter suits alpha month format: e.g. 'January' or 'jan' or 'серпень' or 'серпня'.
+        Otherwise, returns False.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param string: Takes str
         :return: Bool
         """
 
-        word = string.lower()
-        for month in Months.keys():
-            if word in month:
-                return True
-
-        for month in Months.keys():
-            if any(_is_same_word(word, month_name) for month_name in month):
-                return True
-
-        else:
-            return False
+        return Datify.get_alpha_month(string) is not None
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
-    def get_alpha_month(string: str) -> Optional[int]:
-        """
-        Returns number of given month name. If not found, returns None.
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
+    def get_alpha_month(string: str) -> int | None:
+        """Returns number of given month name. If not found, returns None.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param string: Takes str
         :return: int or None
         """
 
-        word = string.lower()
-        for month in Months.keys():
-            if word in month:
-                return Months[month]
+        return _get_alphabetic_month_ordinal(_normalize_month_name(string))
 
-        for month in Months.keys():
-            if any(_is_same_word(word, month_name) for month_name in month):
-                return Months[month]
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
+    def set_month(self, month: str | int) -> None:
+        """Sets month of the Datify object. Takes number of a month or its name.
 
-        else:
-            return None
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
 
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
-    def set_month(self, month: Union[str, int]) -> None:
-        """
-        Sets month of Datify's object. Takes number of a month or its name.
-        If given string isn't a month name, raises ValueError.
         :param month: Takes str or int
         :return: no return
         """
 
-        month = str(month)
+        month = str(month).strip()
 
         if Datify.is_digit_month(month):
             self.month = int(month)
+            return
 
-        elif Datify.is_alpha_month(month):
+        if Datify.is_alpha_month(month):
             self.month = Datify.get_alpha_month(month)
 
-        else:
-            raise ValueError
-
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
     def is_year(year: Union[str, int]) -> bool:
-        """
-        Returns True if given parameter is suitable for the year format: e.g. '14' or '2014'.
-        Returns True or False.
+        """Returns True if given parameter is suitable for the year format: e.g. '14' or '2014'.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param year: Takes str
         :return: Bool
         """
 
-        year = str(year)
+        year = str(year).strip()
+        return re.match(DatifyConfig.year_format, year) is not None
 
-        if re.match(Datify.year_format, year):
-            return True
-
-        else:
-            return False
-
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
     def set_year(self, year: Union[str, int]) -> None:
-        """
-        Sets year of Datify's object.
+        """Sets the year of the Datify object.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :param year: Takes str or int
         :return: no return
         """
 
-        year = str(year)
-
+        year = str(year).strip()
         if Datify.is_year(year):
-            if len(year) == 4:
-                self.year = int(year)
+            self.year = int(year)
 
-            else:
-                self.year = int(f'20{year}')
+    @property
+    def complete(self):
+        """The property that returns True if the date of the datify object is complete.
+        Otherwise, returns False.
 
-        else:
-            raise ValueError
+        The datify object is considered complete if all the fields are not None.
 
-    def date(self) -> datetime:
+        :return: True if the date of the datify object is complete, False otherwise
         """
-        Returns datetime object if all needed parameters are known. Otherwise raises TypeError.
-        :return: datetime object
+
+        return self.year is not None and self.month is not None and self.day is not None
+
+    def date(self) -> datetime | None:
+        """Returns a datetime object if the date of the Datify instance is complete.
+        Otherwise, returns None.
+
+        Will be changed to a property in the 2.0.0.
+
+        :return: datetime object if the date is complete, None otherwise
         """
+
+        if not self.complete:
+            return None
 
         return datetime(year=self.year, month=self.month, day=self.day)
 
-    def tuple(self) -> tuple:
-        """
-        Returns tuple of all parameters.
-        :return: tuple
+    def tuple(self) -> tuple[int | None, int | None, int | None]:
+        """Returns the tuple of all parameters in the following order:
+        **(day, month, year)**.
+
+        Will be changed to a property returning **(year, month, day)** in 2.0.0.
+
+        :return: tuple[int | None, int | None, int | None]
         """
 
         return self.day, self.month, self.year
 
-    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
-                silent=True)
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0')
     def date_or_tuple(self) -> Union[datetime, tuple]:
         """
-        Returns datetime object if all needed parameters are known. Otherwise returns tuple of all parameters.
-        It's not recommended to use because it can return different types, but in some cases it may be useful.
+        Returns datetime object if all needed parameters are known. Otherwise, returns tuple of all parameters.
+        It's not recommended using as return different types, but in some cases it may be useful.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :return: datetime object or tuple
         """
 
@@ -467,24 +652,54 @@ class Datify:
             return self.tuple()
 
     @staticmethod
-    @deprecated('The methods with rare usage cases are not supported anymore', '1.1.0', '2.0.0', silent=True)
+    @deprecated('The methods with rare usage cases are not supported anymore', since='1.1.0', removed='2.0.0',
+                silent=True)
     def setup_variables() -> None:
-        """
-        Sets class variables according to Datify.config values.
+        """Sets the class variables according to Datify.config values.
+
+        Deprecated since 1.1.0. Will be removed in 2.0.0.
+
         :return: None
         """
 
-        Datify.splitters = config['SPLITTERS']
-        Datify.day_format_digit = config['FORMAT_DAY_DIGIT']
-        Datify.day_format_alnum = config['FORMAT_DAY_ALNUM']
-        Datify.month_format_digit = config['FORMAT_MONTH_DIGIT']
-        Datify.year_format = config['FORMAT_YEAR_DIGIT']
-        Datify.date_format = config['FORMAT_DATE']
-        Datify.day_first = config['DAY_FIRST']
+        Datify.splitters = DatifyConfig.splitters
+        Datify.day_format_digit = DatifyConfig.day_format
+        Datify.day_format_alnum = DatifyConfig.day_format
+        Datify.month_format_digit = DatifyConfig.month_format_digit
+        Datify.year_format = DatifyConfig.year_format
+        Datify.date_format = DatifyConfig.date_format()
+        Datify.day_first = DatifyConfig.day_first
+
+    def _initialize_datify(self) -> None:
+        """Initializes the Datify instance with the initial values of None."""
+        self.day, self.month, self.year = (None,) * 3
 
     def __repr__(self) -> str:
-        """
-        Returns a string representation of the object.
+        """Returns a string representation of the Datify object.
+
         :return: str
         """
-        return f'<Datify object {self.tuple()}>'
+
+        return f'<Datify[year={self.year}, month={self.month}, day={self.day}]>'
+
+
+def _normalize_month_name(name: str) -> str:
+    """Returns a stripped and lowercase string from the given string.
+
+    :param name: a string to be normalized
+    :return: the normalized string
+    """
+
+    return name.strip().lower()
+
+
+def string_match(pattern: str, string: str) -> str | None:
+    """Returns the first string match of the given pattern in the given string.
+
+    :param pattern: the pattern to match against the string
+    :param string: the string to match with the pattern
+    :return: string matching the given pattern or None if no match was found
+    """
+
+    match = re.search(pattern, string)
+    return match.group(0) if match is not None else None
